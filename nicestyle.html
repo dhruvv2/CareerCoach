@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>ChatGPT API Integration</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f1f1f1;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .chat-container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #fff;
+            border-radius: 5px;
+            padding: 20px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        
+        .user {
+            text-align: right;
+            margin-bottom: 10px;
+        }
+        
+        .bot {
+            text-align: left;
+            margin-bottom: 10px;
+        }
+        
+        .user-input-container {
+            display: flex;
+            margin-top: 20px;
+        }
+        
+        #user-input {
+            flex-grow: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 5px 0 0 5px;
+        }
+        
+        #user-input:focus {
+            outline: none;
+        }
+        
+        #send-button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 0 5px 5px 0;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <h1>ChatGPT API Integration</h1>
+    <div class="chat-container">
+        <div id="chat-container"></div>
+        <form onsubmit="handleUserMessage(event)">
+            <div class="user-input-container">
+                <input type="text" id="user-input" placeholder="Type your message here" autocomplete="off">
+                <button type="submit" id="send-button">Send</button>
+            </div>
+        </form>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script>
+        // Function to send a message to the ChatGPT API
+        async function sendMessage(message) {
+            try {
+                const response = await axios.post('https://api.openai.com/v1/chat/completions', {
+                    "model": "gpt-3.5-turbo",
+                    "messages": [{"role": "system", "content": "You are a user requesting assistance."}, {"role": "user", "content": message}]
+                }, {
+                    headers: {
+                        'Authorization': 'Bearer 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',
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                // Handle the API response
+                const generatedMessage = response.data.choices[0].message.content;
+                displayMessageWithTyping(generatedMessage, 'bot');
+
+            } catch (error) {
+                console.error(error);
+                displayMessageWithTyping("Oops! An error occurred.", 'bot');
+            }
+        }
+
+        // Function to display the chat messages with typing effect
+        async function displayMessageWithTyping(message, role) {
+            const chatContainer = document.getElementById('chat-container');
+            const messageElement = document.createElement('div');
+            messageElement.classList.add(role);
+
+            chatContainer.appendChild(messageElement);
+
+            let i = 0;
+            const typingEffect = setInterval(() => {
+                if (i < message.length) {
+                    messageElement.textContent += message.charAt(i);
+                    i++;
+                } else {
+                    clearInterval(typingEffect);
+                    chatContainer.scrollTop = chatContainer.scrollHeight;
+                }
+            }, 50);
+        }
+
+        // Function to handle user input and send messages
+        function handleUserMessage(event) {
+            event.preventDefault();
+            const userInput = document.getElementById('user-input');
+            const message = userInput.value.trim();
+
+            if (message !== '') {
+                displayMessageWithTyping(message, 'user');
+                sendMessage(message);
+                userInput.value = '';
+            }
+        }
+    </script>
+</body>
+</html>
